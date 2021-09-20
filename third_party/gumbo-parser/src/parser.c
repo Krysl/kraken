@@ -18,8 +18,13 @@
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <string.h>
+#ifndef _WIN32
 #include <strings.h>
+#else
+#include <string.h>
+#  define strcasecmp _stricmp
+#  define strncasecmp _strnicmp
+#endif
 
 #include "attribute.h"
 #include "error.h"

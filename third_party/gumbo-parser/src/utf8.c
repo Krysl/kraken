@@ -19,7 +19,12 @@
 #include <assert.h>
 #include <stdint.h>
 #include <string.h>
+#ifndef _WIN32
 #include <strings.h>  // For strncasecmp.
+#else
+#  define strcasecmp _stricmp
+#  define strncasecmp _strnicmp
+#endif
 
 #include "error.h"
 #include "gumbo.h"

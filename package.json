@@ -1,6 +1,7 @@
 {
   "private": true,
   "scripts": {
+    "build:bridge:windows": "node scripts/build_windows_dll",
     "build:bridge:macos": "node scripts/build_darwin_dylib",
     "build:bridge:macos:release": "KRAKEN_BUILD=Release node scripts/build_darwin_dylib",
     "build:bridge:android": "node scripts/build_android_so",

@@ -48,7 +48,8 @@ extern "C" {
 */
     typedef unsigned short JSChar;
 #else
-    typedef wchar_t JSChar;
+    // typedef wchar_t JSChar;
+    typedef unsigned short JSChar;
 #endif
 
 /*!

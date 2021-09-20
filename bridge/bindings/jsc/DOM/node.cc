@@ -582,7 +582,7 @@ JSValueRef NodeInstance::getProperty(std::string &name, JSValueRef *exception) {
     return instance != nullptr ? instance->object : JSValueMakeNull(ctx);
   }
   case JSNode::NodeProperty::childNodes: {
-    JSValueRef arguments[childNodes.size()];
+    JSValueRef *arguments = new JSValueRef[childNodes.size()];
 
     for (int i = 0; i < childNodes.size(); i++) {
       arguments[i] = childNodes[i]->object;

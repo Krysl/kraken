@@ -107,6 +107,33 @@ if ($ENV{KRAKEN_JS_ENGINE} MATCHES "jsc")
     list(APPEND BRIDGE_LINK_LIBS
             JavaScriptCore
             )
+  elseif (${IS_WINDOWS})
+    message(WARNING "KRAKEN_JS_ENGINE MATCHES jsc IS_WINDOWS " ${WINDOWS_ABI})
+    add_compile_options(/Zc:preprocessor)
+    add_compile_options(/WX)
+    add_compile_options(/wd4275 /wd4251)
+    add_compile_options(/wd4996) # strcpy unsafe
+    add_compile_options(/wd4065) #
+    add_compile_options(/wd4099) # C4099: 类型名称以前使用“struct”现在使用的是“class”
+    add_compile_options(/wd4018) # C4018: 有符号/无符号不匹配
+    add_compile_options(/wd4244) # 数据转换
+    add_compile_options(/wd4267) # 数据转换
+    add_compile_options(/wd4715) # all switch return val
+
+
+    list(APPEND BRIDGE_INCLUDE
+            ${CMAKE_CURRENT_SOURCE_DIR}/../third_party/JavaScriptCore/include
+            )
+    add_library(JavaScriptCore SHARED IMPORTED)
+    set_target_properties(JavaScriptCore PROPERTIES IMPORTED_LOCATION
+            "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/JavaScriptCore/lib/windows/${WINDOWS_ABI}/JavaScriptCore.dll"
+            )
+    set_target_properties(JavaScriptCore PROPERTIES IMPORTED_IMPLIB
+            "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/JavaScriptCore/lib/windows/${WINDOWS_ABI}/JavaScriptCore.lib"
+            )
+    list(APPEND BRIDGE_LINK_LIBS
+            JavaScriptCore
+            )
   elseif (EXISTS ${DEBUG_JSC_ENGINE})
     list(APPEND BRIDGE_INCLUDE ${DEBUG_JSC_ENGINE}/Headers)
     add_library(JavaScriptCore SHARED IMPORTED)
@@ -254,7 +281,11 @@ if (${CMAKE_BUILD_TYPE} STREQUAL "release" OR ${CMAKE_BUILD_TYPE} STREQUAL "relw
   target_compile_options(kraken PRIVATE -fno-exceptions -fvisibility=hidden)
 else()
   ### remove dynamic_cast and exceptions
-  target_compile_options(kraken PRIVATE -fno-exceptions)
+  if (${IS_WINDOWS})
+    target_compile_options(kraken PRIVATE /EHsc)
+  else()
+    target_compile_options(kraken PRIVATE -fno-exceptions)
+  endif()
 endif()
 
 ### KrakenStatic
@@ -288,7 +319,7 @@ endif ()
 
 if ($ENV{KRAKEN_JS_ENGINE} MATCHES "jsc")
   set_target_properties(kraken PROPERTIES OUTPUT_NAME kraken_jsc)
-  set_target_properties(kraken_static PROPERTIES OUTPUT_NAME kraken_jsc)
+  set_target_properties(kraken_static PROPERTIES OUTPUT_NAME kraken_jsc_s)
 endif()
 
 if (DEFINED ENV{LIBRARY_OUTPUT_DIR})

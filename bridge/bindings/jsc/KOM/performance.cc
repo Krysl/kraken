@@ -240,7 +240,7 @@ JSValueRef JSPerformance::getEntries(JSContextRef ctx, JSObjectRef function, JSO
   auto entries = performance->getFullEntries();
 
   size_t entriesSize = entries.size();
-  JSValueRef args[entriesSize];
+  JSValueRef *args = new JSValueRef[entriesSize];
 
   for (size_t i = 0; i < entriesSize; i++) {
     auto &entry = entries[i];

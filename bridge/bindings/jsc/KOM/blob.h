@@ -47,10 +47,10 @@ public:
     void getPropertyNames(JSPropertyNameAccumulatorRef accumulator) override;
 
     /// get an pointer of bytes data from JSBlob
-    uint8_t *bytes();
+    KRAKEN_EXPORT uint8_t *bytes();
 
     /// get bytes data's length
-    int32_t size();
+    KRAKEN_EXPORT int32_t size();
 
   private:
     size_t _size;

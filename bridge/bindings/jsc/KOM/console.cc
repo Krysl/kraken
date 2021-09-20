@@ -17,7 +17,7 @@ JSValueRef print(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject,
   if (JSValueIsString(ctx, log)) {
     JSStringRef str = JSValueToStringCopy(ctx, log, nullptr);
     int32_t length = JSStringGetMaximumUTF8CStringSize(str);
-    char buffer[length];
+    char *buffer = new char[length];
     JSStringGetUTF8CString(str, buffer, length);
     JSStringRelease(str);
     stream << buffer;

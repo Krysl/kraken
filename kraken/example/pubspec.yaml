@@ -11,8 +11,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_test:
+    sdk: flutter
   kraken: ^0.7.2
-  kraken_websocket: ^0.2.0-dev.1
+  # kraken_websocket: ^0.2.0-dev.1
   kraken_devtools: ^0.3.0
 
 # When depending on this package from a real application,

@@ -14,7 +14,28 @@
 #include <memory>
 #include <thread>
 
-#define KRAKEN_EXPORT __attribute__((__visibility__("default")))
+// https://gcc.gnu.org/wiki/Visibility
+#if defined _WIN32 || defined __CYGWIN__
+  #if defined kraken_EXPORTS
+    #ifdef __GNUC__
+      #define KRAKEN_EXPORT __attribute__ ((dllexport))
+    #else
+      #define KRAKEN_EXPORT __declspec(dllexport) // Note: actually gcc seems to also supports this syntax.
+    #endif
+  #else
+    #ifdef __GNUC__
+      #define KRAKEN_EXPORT __attribute__ ((dllimport))
+    #else
+      #define KRAKEN_EXPORT __declspec(dllimport) // Note: actually gcc seems to also supports this syntax.
+    #endif
+  #endif
+#else
+  #if __GNUC__ >= 4
+    #define KRAKEN_EXPORT __attribute__((__visibility__("default")))
+  #else
+    #define KRAKEN_EXPORT
+  #endif
+#endif
 
 struct NativeString;
 struct Screen;

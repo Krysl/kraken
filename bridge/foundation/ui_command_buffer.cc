@@ -6,11 +6,13 @@
 #include "dart_methods.h"
 #include "include/kraken_bridge.h"
 
+#include <assert.h>
 namespace foundation {
 
 UICommandBuffer::UICommandBuffer(int32_t contextId) : contextId(contextId) {}
 
 void UICommandBuffer::addCommand(int32_t id, int32_t type, void *nativePtr, bool batchedUpdate) {
+  assert(type>=0 && type < UICommand::_count);
   if (batchedUpdate) {
     kraken::getDartMethod()->requestBatchUpdate(contextId);
     update_batched = true;
@@ -21,6 +23,7 @@ void UICommandBuffer::addCommand(int32_t id, int32_t type, void *nativePtr, bool
 }
 
 void UICommandBuffer::addCommand(int32_t id, int32_t type, void *nativePtr) {
+  assert(type>=0 && type < UICommand::_count);
   if (!update_batched) {
     kraken::getDartMethod()->requestBatchUpdate(contextId);
     update_batched = true;
@@ -31,6 +34,7 @@ void UICommandBuffer::addCommand(int32_t id, int32_t type, void *nativePtr) {
 }
 
 void UICommandBuffer::addCommand(int32_t id, int32_t type, NativeString &args_01, void *nativePtr) {
+  assert(type>=0 && type < UICommand::_count);
   if (!update_batched) {
     kraken::getDartMethod()->requestBatchUpdate(contextId);
     update_batched = true;
@@ -42,6 +46,7 @@ void UICommandBuffer::addCommand(int32_t id, int32_t type, NativeString &args_01
 
 void UICommandBuffer::addCommand(int32_t id, int32_t type, NativeString &args_01, NativeString &args_02,
                                                 void *nativePtr) {
+  assert(type>=0 && type < UICommand::_count);
   if (!update_batched) {
     kraken::getDartMethod()->requestBatchUpdate(contextId);
     update_batched = true;

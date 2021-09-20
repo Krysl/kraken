@@ -99,6 +99,7 @@ void emitUIEvent(int contextId, Pointer<NativeEventTarget> nativePtr, Event even
   Pointer<Void> nativeEvent = event.toNative().cast<Void>();
   bool isCustomEvent = event is CustomEvent;
   Pointer<NativeString> eventTypeString = stringToNativeString(event.type);
+  assert(eventTypeString.ref.length < 65536);
   dispatchEvent(nativeEventTarget, eventTypeString, nativeEvent, isCustomEvent ? 1 : 0);
   freeNativeString(eventTypeString);
 }
@@ -324,7 +325,9 @@ List<UICommand> readNativeUICommandToDart(Pointer<Uint64> nativeCommandItems, in
     // +-------+-------+
     int id = typeIdCombine >> 32;
     int type = typeIdCombine ^ (id << 32);
-
+    if (type < 0 || type > UICommandType.values.length) {
+      assert(true, 'type "$type" invalid');
+    }
     command.type = UICommandType.values[type];
     command.id = id;
     int nativePtrValue = rawMemory[i + nativePtrMemOffset];

@@ -152,9 +152,9 @@ task('clean', () => {
 const libOutputPath = join(TARGET_PATH, platform, 'lib');
 
 function findDebugJSEngine(platform) {
-  if (platform == 'macos' || platform == 'ios') {
+  if (platform == 'macos' || platform == 'ios' || platform == 'windows') {
     let packageConfigFilePath = path.join(paths.kraken, '.dart_tool/package_config.json');
-
+    console.log(`findDebugJSEngine ${packageConfigFilePath}`)
     if (!fs.existsSync(packageConfigFilePath)) {
       execSync('flutter pub get', {
         cwd: paths.kraken,
@@ -223,13 +223,13 @@ task('build-darwin-kraken-lib', done => {
 
 task('compile-polyfill', (done) => {
   if (!fs.existsSync(path.join(paths.polyfill, 'node_modules'))) {
-    spawnSync('npm', ['install'], {
+    spawnSync(platform != 'win32' ? 'npm' : 'npm.cmd', ['install'], {
       cwd: paths.polyfill,
       stdio: 'inherit'
     });
   }
 
-  let result = spawnSync('npm', ['run', buildMode === 'Release' ? 'build:release' : 'build'], {
+  let result = spawnSync(platform != 'win32' ? 'npm' : 'npm.cmd', ['run', buildMode === 'Release' ? 'build:release' : 'build'], {
     cwd: paths.polyfill,
     env: {
       ...process.env,
@@ -563,8 +563,86 @@ task('android-so-clean', (done) => {
   done();
 });
 
+task('windows-dll-clean', (done) => {
+  execSync(`rm -rf ${paths.bridge}/build/windows`, { stdio: 'inherit', shell: winShell });
+  done();
+});
+
+
+task('build-windows-kraken-lib', (done) => {
+
+  if (platform == 'win32') {
+
+  } else {
+
+  }
+
+  // const archs = ['x86', 'x64'];
+  const archs = ['x64'];
+  const buildType = buildMode == 'Release' ? 'Relwithdebinfo' : 'Debug';
+
+  const cmakeGeneratorTemplate = platform == 'win32' ? 'Ninja' : 'Unix Makefiles';
+
+
+  let builtWithDebugJsc = program.jsEngine === 'jsc' && !!program.builtWithDebugJsc;
+  let externCmakeArgs = [];
+  if (isProfile) {
+    externCmakeArgs.push('-DENABLE_PROFILE=TRUE');
+  }
+  // if (builtWithDebugJsc) {
+  //   let debugJsEngine = findDebugJSEngine(platform == 'win32' ? 'windows' : platform);
+  //   externCmakeArgs.push(`-DDEBUG_JSC_ENGINE=${debugJsEngine}`)
+  // }
+  console.log(`builtWithDebugJsc = ${builtWithDebugJsc}`)
+  console.log(`externCmakeArgs = ${externCmakeArgs}`)
+
+  archs.forEach(arch => {
+    const soBinaryDirectory = path.join(paths.bridge, `build/windows/lib/${arch}`);
+    const bridgeCmakeDir = path.join(paths.bridge, 'cmake-build-windows-' + arch);
+    // generate project
+    const cmd_cmake_gen = `cmake -DCMAKE_BUILD_TYPE=${buildType} \
+    -DIS_WINDOWS=TRUE \
+    -DENABLE_TEST=true \
+    -DWINDOWS_ABI="${arch}" \
+    ${externCmakeArgs.join(' ')} \
+    -G "${cmakeGeneratorTemplate}" \
+    -B ${paths.bridge}/cmake-build-windows-${arch} -S ${paths.bridge}`
+    console.log(cmd_cmake_gen)
+    execSync(cmd_cmake_gen,
+      {
+        cwd: paths.bridge,
+        stdio: 'inherit',
+        env: {
+          ...process.env,
+          KRAKEN_JS_ENGINE: program.jsEngine,
+          LIBRARY_OUTPUT_DIR: soBinaryDirectory
+        }
+      });
+    const result = spawnSync('python.exe',
+      [
+        '-c',
+        'import multiprocessing;print(multiprocessing.cpu_count())'
+      ], {
+      // stdio: 'inherit'
+    })
+    let cpu_num = 12;
+    if (result.status === 0 && result.output[1] && result.output[1].length > 0) {
+      cpu_num = parseInt(result.output[1]);
+    }
+
+    // build
+    const cmd_cmake_build = `cmake --build ${bridgeCmakeDir} --target kraken kraken_test -- -j ${cpu_num}`
+    console.log(cmd_cmake_build)
+    execSync(cmd_cmake_build, {
+      stdio: 'inherit'
+    });
+  });
+
+  done();
+});
+
 function getDevicesInfo() {
-  let output = JSON.parse(execSync('flutter devices --machine', {stdio: 'pipe', encoding: 'utf-8'}));
+  let output = JSON.parse(execSync('flutter devices --machine', { stdio: 'pipe', encoding: 'utf-8' }));
   let androidDevices = output.filter(device => {
     return device.sdk.indexOf('Android') >= 0;
   });

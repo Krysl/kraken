@@ -41,8 +41,22 @@ void initKraken${outputName}(kraken::JSBridge *bridge) {
 }
 `;
 
+function chunkString(str, len) {
+  const size = Math.ceil(str.length/len)
+  const r = Array(size)
+  let offset = 0
+
+  for (let i = 0; i < size; i++) {
+    r[i] = str.substr(offset, len)
+    offset += len
+  }
+
+  return r
+}
+
 function convertJSToCpp(code, outputName) {
   code = code.replace(/\)\"/g, '))") + std::u16string(uR"("');
+  code = chunkString(code, 16380/2/2).join('))") + std::u16string(uR"("') // fix error C2026 for msvc
   return getPolyFillSource(code, outputName);
 }
 

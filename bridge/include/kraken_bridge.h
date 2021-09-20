@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <thread>
+#include <algorithm>
 
 #include "dart_methods.h"
 #include "kraken_foundation.h"
@@ -16,8 +17,34 @@
 #include "kraken_bridge_jsc.h"
 #endif
 
-#define KRAKEN_EXPORT_C extern "C" __attribute__((visibility("default"))) __attribute__((used))
-#define KRAKEN_EXPORT __attribute__((__visibility__("default")))
+// https://gcc.gnu.org/wiki/Visibility
+#if defined _WIN32 || defined __CYGWIN__
+  #define __thread_id thread::id
+  #if defined kraken_EXPORTS || defined kraken_test_EXPORTS
+    #ifdef __GNUC__
+      #define KRAKEN_EXPORT __attribute__ ((dllexport))
+    #else
+      #ifndef KRAKEN_EXPORT
+      #define KRAKEN_EXPORT __declspec(dllexport) // Note: actually gcc seems to also supports this syntax.
+      #endif
+      #define KRAKEN_EXPORT_C extern "C" __declspec(dllexport)
+    #endif
+  #else
+    #ifdef __GNUC__
+      #define KRAKEN_EXPORT __attribute__ ((dllimport))
+    #else
+      #define KRAKEN_EXPORT __declspec(dllimport) // Note: actually gcc seems to also supports this syntax.
+      #define KRAKEN_EXPORT_C extern "C" __declspec(dllimport)
+    #endif
+  #endif
+#else
+  #if __GNUC__ >= 4
+    #define KRAKEN_EXPORT __attribute__((__visibility__("default")))
+    #define KRAKEN_EXPORT_C extern "C" __attribute__((visibility("default"))) __attribute__((used))
+  #else
+    #define KRAKEN_EXPORT
+  #endif
+#endif
 
 KRAKEN_EXPORT
 std::__thread_id getUIThreadId();
@@ -57,6 +84,7 @@ enum UICommand {
   removeProperty,
   cloneNode,
   removeEvent,
+  _count
 };
 
 struct KRAKEN_EXPORT UICommandItem {

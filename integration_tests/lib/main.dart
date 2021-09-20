@@ -12,19 +12,19 @@ import 'package:path/path.dart' as path;
 import 'bridge/from_native.dart';
 import 'bridge/to_native.dart';
 import 'bridge/test_input.dart';
-import 'custom/custom_object_element.dart';
+// import 'custom/custom_object_element.dart';
 import 'custom/custom_element_widget.dart';
 import 'package:kraken/gesture.dart';
-import 'package:kraken_websocket/kraken_websocket.dart';
-import 'package:kraken_animation_player/kraken_animation_player.dart';
-import 'package:kraken_video_player/kraken_video_player.dart';
-import 'package:kraken_webview/kraken_webview.dart';
+// import 'package:kraken_websocket/kraken_websocket.dart';
+// import 'package:kraken_animation_player/kraken_animation_player.dart';
+// import 'package:kraken_video_player/kraken_video_player.dart';
+// import 'package:kraken_webview/kraken_webview.dart';
 import 'local_http_server.dart';
 
 String? pass = (AnsiPen()..green())('[TEST PASS]');
 String? err = (AnsiPen()..red())('[TEST FAILED]');
 
-final String __dirname = path.dirname(Platform.script.path);
+final String __dirname = path.dirname(Platform.script.toFilePath());
 final String testDirectory = Platform.environment['KRAKEN_TEST_DIR'] ?? __dirname;
 final Directory specsDirectory = Directory(path.join(testDirectory, '.specs'));
 
@@ -68,10 +68,10 @@ class IntegrationTestUriParser extends UriParser {
 
 // By CLI: `KRAKEN_ENABLE_TEST=true flutter run`
 void main() async {
-  KrakenWebsocket.initialize();
-  KrakenAnimationPlayer.initialize();
-  KrakenVideoPlayer.initialize();
-  KrakenWebView.initialize();
+  // KrakenWebsocket.initialize();
+  // KrakenAnimationPlayer.initialize();
+  // KrakenVideoPlayer.initialize();
+  // KrakenWebView.initialize();
   defineKrakenCustomElements();
 
   // Local HTTP server.
@@ -85,7 +85,7 @@ void main() async {
 
   // Set render font family AlibabaPuHuiTi to resolve rendering difference.
   CSSText.DEFAULT_FONT_FAMILY_FALLBACK = ['AlibabaPuHuiTi'];
-  setObjectElementFactory(customObjectElementFactory);
+  // setObjectElementFactory(customObjectElementFactory);
 
   List<FileSystemEntity> specs = specsDirectory.listSync(recursive: true);
   List<Map<String, String>> mainTestPayload = [];
@@ -152,7 +152,7 @@ void main() async {
       int contextId = i;
       initTestFramework(contextId);
       addJSErrorListener(contextId, (String err) {
-        print(err);
+        print('JS Error: ${err}');
       });
 
       List<Map<String, String>> testPayload = allSpecsPayload[i];

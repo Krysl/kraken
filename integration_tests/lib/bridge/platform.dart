@@ -16,11 +16,21 @@ const String KRAKEN_LIBRARY_PATH = 'KRAKEN_LIBRARY_PATH';
 const String KRAKEN_JS_ENGINE = 'KRAKEN_JS_ENGINE';
 final String? kkLibraryPath = Platform.environment[KRAKEN_LIBRARY_PATH];
 final String kkJsEngine = Platform.environment[KRAKEN_JS_ENGINE] ??
-    ((Platform.isIOS || Platform.isMacOS || Platform.isAndroid) ? 'jsc' : 'v8');
-final String libName = 'libkraken_test_$kkJsEngine';
+    ((Platform.isIOS ||
+            Platform.isMacOS ||
+            Platform.isAndroid ||
+            Platform.isWindows)
+        ? 'jsc'
+        : 'v8');
+final String libName =
+    (Platform.isIOS || Platform.isMacOS || Platform.isAndroid)
+        ? 'libkraken_test_$kkJsEngine'
+        : 'kraken_test_$kkJsEngine';
 final String nativeDynamicLibraryName = Platform.isMacOS || Platform.isIOS
     ? '$libName.dylib'
-    : Platform.isWindows ? '$libName.dll' : '$libName.so';
+    : Platform.isWindows
+        ? '$libName.dll'
+        : '$libName.so';
 DynamicLibrary nativeDynamicLibrary = DynamicLibrary.open(join(
     kkLibraryPath ?? (Platform.isLinux ? '\$ORIGIN' : ''),
     nativeDynamicLibraryName));

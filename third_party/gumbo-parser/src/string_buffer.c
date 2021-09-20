@@ -19,7 +19,12 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#ifndef _WIN32
 #include <strings.h>
+#else
+#  define strcasecmp _stricmp
+#  define strncasecmp _strnicmp
+#endif
 
 #include "string_piece.h"
 #include "util.h"

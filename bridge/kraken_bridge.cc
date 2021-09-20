@@ -84,6 +84,7 @@ int32_t searchForAvailableContextId() {
 } // namespace
 
 void initJSContextPool(int poolSize) {
+  KRAKEN_LOG(ERROR) << "initJSContextPool" << std::endl;
   uiThreadId = std::this_thread::get_id();
   // When dart hot restarted, should dispose previous bridge and clear task message queue.
   if (inited) {
