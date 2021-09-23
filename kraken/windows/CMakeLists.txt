@@ -22,4 +22,11 @@ target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin)
 # # List of absolute paths to libraries that should be bundled with the plugin
 set(kraken_bundled_libraries
     "${CMAKE_CURRENT_SOURCE_DIR}/kraken_jsc.dll"
+    "${CMAKE_CURRENT_SOURCE_DIR}/CFLite.dll"
+    "${CMAKE_CURRENT_SOURCE_DIR}/icudt69.dll"
+    "${CMAKE_CURRENT_SOURCE_DIR}/icuin69.dll"
+    "${CMAKE_CURRENT_SOURCE_DIR}/icuuc69.dll"
+    "${CMAKE_CURRENT_SOURCE_DIR}/JavaScriptCore.dll"
+    "${CMAKE_CURRENT_SOURCE_DIR}/pthreadsVC2.dll"
+    "${CMAKE_CURRENT_SOURCE_DIR}/WTF.dll"
     PARENT_SCOPE)
