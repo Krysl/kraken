@@ -458,10 +458,6 @@ void NativeEventTarget::dispatchEventImpl(NativeEventTarget *nativeEventTarget, 
   assert_m(nativeEventTarget->instance != nullptr, "NativeEventTarget should have owner");
   EventTargetInstance *eventTargetInstance = nativeEventTarget->instance;
   JSContext *context = eventTargetInstance->context;
-  if(nativeEventType->length > 65536)
-  {
-    throw "string too long";
-  }
   std::u16string u16EventType = std::u16string(reinterpret_cast<const char16_t *>(nativeEventType->string),
                                                nativeEventType->length);
   std::string eventType = toUTF8(u16EventType);

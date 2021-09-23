@@ -400,15 +400,13 @@ JSValueRef JSDocument::getElementsByTagName(JSContextRef ctx, JSObjectRef functi
     return false;
   });
 
-  JSValueRef *elementArguments = new JSValueRef[elements.size()];
+  JSValueRef *elementArguments = (JSValueRef*)alloca(sizeof(JSValueRef) * elements.size());
 
   for (int i = 0; i < elements.size(); i++) {
     elementArguments[i] = elements[i]->object;
   }
 
-  JSObjectRef ret = JSObjectMakeArray(ctx, elements.size(), elementArguments, exception);
-  free(elementArguments);
-  return ret;
+  return JSObjectMakeArray(ctx, elements.size(), elementArguments, exception);
 }
 
 bool DocumentInstance::setProperty(std::string &name, JSValueRef value, JSValueRef *exception) {

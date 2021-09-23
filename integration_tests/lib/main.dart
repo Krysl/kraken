@@ -152,7 +152,7 @@ void main() async {
       int contextId = i;
       initTestFramework(contextId);
       addJSErrorListener(contextId, (String err) {
-        print('JS Error: ${err}');
+        print(err);
       });
 
       List<Map<String, String>> testPayload = allSpecsPayload[i];

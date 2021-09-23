@@ -21,6 +21,7 @@ JSValueRef print(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject,
     JSStringGetUTF8CString(str, buffer, length);
     JSStringRelease(str);
     stream << buffer;
+    free(buffer);
   } else {
     KRAKEN_LOG(ERROR) << "Failed to execute 'print': log must be string.";
     return JSValueMakeUndefined(ctx);

@@ -93,9 +93,6 @@ class _MyHomePageState extends State<MyBrowser> {
           viewportHeight: viewportSize.height - appBar.preferredSize.height - queryData.padding.vertical,
           bundlePath: 'assets/bundle.js',
           // devToolsService: ChromeDevToolsService(),
-          onJSError: (str) {
-              print('JSError: $str');
-            },
         ),
     ));
   }

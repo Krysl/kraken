@@ -119,7 +119,7 @@ private:
 class KRAKEN_EXPORT JSFunctionHolder {
 public:
   JSFunctionHolder() = delete;
-  /* KRAKEN_EXPORT  */explicit JSFunctionHolder(JSContext *context, JSObjectRef root, void *data, const std::string &name,
+  explicit JSFunctionHolder(JSContext *context, JSObjectRef root, void *data, const std::string &name,
                                           JSObjectCallAsFunctionCallback callback);
   JSObjectRef function();
 private:
@@ -899,9 +899,9 @@ private:
   friend JSElement;
   JSStringHolder m_tagName{context, ""};
 
-  /* KRAKEN_EXPORT */ void _notifyNodeRemoved(NodeInstance *node) override;
+  void _notifyNodeRemoved(NodeInstance *node) override;
   void _notifyChildRemoved();
-  /* KRAKEN_EXPORT */ void _notifyNodeInsert(NodeInstance *insertNode) override;
+  void _notifyNodeInsert(NodeInstance *insertNode) override;
   void _notifyChildInsert();
   void _didModifyAttribute(std::string &name, JSValueRef oldId, JSValueRef newId);
   void _beforeUpdateId(JSValueRef oldId, JSValueRef newId);
