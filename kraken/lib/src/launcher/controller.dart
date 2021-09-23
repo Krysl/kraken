@@ -495,6 +495,11 @@ class KrakenController {
     _methodChannel = methodChannel;
     KrakenMethodChannel.setJSMethodCallCallback(this);
 
+    if (!_controllerMap.containsKey(0)) {
+      _controllerMap[0] = this;
+      _module = KrakenModuleController(this, 0);
+    }
+
     _view = KrakenViewController(viewportWidth, viewportHeight,
         background: background,
         showPerformanceOverlay: showPerformanceOverlay,
@@ -510,11 +515,11 @@ class KrakenController {
     }
 
     final int contextId = _view.contextId;
+    if(contextId != 0 || _module == null)
+      _module = KrakenModuleController(this, contextId);
 
-    _module = KrakenModuleController(this, contextId);
-
-    assert(!_controllerMap.containsKey(contextId),
-        'found exist contextId of KrakenController, contextId: $contextId');
+    // assert(!_controllerMap.containsKey(contextId),
+    //     'found exist contextId of KrakenController, contextId: $contextId');
     _controllerMap[contextId] = this;
     assert(!_nameIdMap.containsKey(name), 'found exist name of KrakenController, name: $name');
     if (name != null) {

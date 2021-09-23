@@ -256,6 +256,7 @@ NativeString *NativeString::clone() {
 }
 
 void NativeString::free() {
-  delete[] string;
-  delete this;
+  printf("delete:%S\n", (wchar_t*)string);
+  // delete[] string;
+  // delete this;
 }

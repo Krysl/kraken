@@ -406,7 +406,9 @@ JSValueRef JSDocument::getElementsByTagName(JSContextRef ctx, JSObjectRef functi
     elementArguments[i] = elements[i]->object;
   }
 
-  return JSObjectMakeArray(ctx, elements.size(), elementArguments, exception);
+  JSObjectRef ret = JSObjectMakeArray(ctx, elements.size(), elementArguments, exception);
+  free(elementArguments);
+  return ret;
 }
 
 bool DocumentInstance::setProperty(std::string &name, JSValueRef value, JSValueRef *exception) {
