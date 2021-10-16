@@ -1,5 +1,5 @@
 import 'dart:ffi';
-import 'package:ffi/ffi.dart';
+import 'package:ffi/ffi.dart' hide malloc;
 import 'from_native.dart';
 
 // MUST READ:

@@ -69,10 +69,13 @@ public:
       auto &&ctx = *begin;
       if (ctx.get() == context) {
         ctx.reset();
-        contextList.erase(begin);
+        begin = contextList.erase(begin);
+        end = std::end(contextList);
       }
-
-      begin++;
+      else
+      {
+        begin++;
+      }
     }
   }
 

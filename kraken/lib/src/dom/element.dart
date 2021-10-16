@@ -19,7 +19,6 @@ import 'package:kraken/dom.dart';
 import 'package:kraken/rendering.dart';
 import 'package:kraken/css.dart';
 import 'package:meta/meta.dart';
-import 'package:ffi/ffi.dart';
 
 import 'element_native_methods.dart';
 

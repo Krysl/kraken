@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
 
-import 'package:ffi/ffi.dart';
+import 'package:ffi/ffi.dart' hide malloc;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:kraken/dom.dart';

@@ -1,6 +1,6 @@
 import 'dart:ffi';
 import 'dart:typed_data';
-import 'package:ffi/ffi.dart';
+import 'package:ffi/ffi.dart' hide malloc;
 import 'package:kraken/bridge.dart';
 
 final String PERF_CONTROLLER_INIT_START = 'controller_init_start';

@@ -253,6 +253,7 @@ function matchError(errmsg) {
 task('integration-test', (done) => {
   const childProcess = spawn('npm', ['run', 'test'], {
     stdio: 'pipe',
+    shell: platform === 'win32',
     cwd: paths.tests
   });
 
@@ -294,6 +295,7 @@ task('integration-test', (done) => {
 task('unit-test', (done) => {
   const childProcess = spawn('flutter', ['test', '--coverage'], {
     stdio: 'pipe',
+    shell: platform === 'win32',
     cwd: paths.kraken
   });
 
@@ -334,6 +336,7 @@ task('unit-test-coverage-reporter', (done) => {
   const childProcess = spawn('npm', ['run', 'test:unit:report'], {
     stdio: 'inherit',
     cwd: KRAKEN_ROOT,
+    shell: platform === 'win32'
   });
   childProcess.on('exit', () => {
     done();

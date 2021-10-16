@@ -505,8 +505,8 @@ NodeInstance *NodeInstance::internalReplaceChild(NodeInstance *newChild, NodeIns
   }
 
   newChild->parentNode = this;
-  childNodes.erase(childIndex);
-  childNodes.insert(childIndex, newChild);
+  auto childIndex2 = childNodes.erase(childIndex);
+  childNodes.insert(childIndex2, newChild);
   newChild->refer();
 
   oldChild->_notifyNodeRemoved(this);

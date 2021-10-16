@@ -67,6 +67,12 @@ void KrakenPlugin::HandleMethodCall(
       version_stream << "7";
     }
     result->Success(flutter::EncodableValue(version_stream.str()));
+  } else if (method_call.method_name().compare("getTemporaryDirectory") == 0) {
+    CHAR tempPath[MAX_PATH+1];
+    GetTempPathA(MAX_PATH+1, tempPath);
+    std::string tempPathStr(tempPath);
+    tempPathStr += "/kraken";
+    result->Success(flutter::EncodableValue(tempPathStr));
   } else {
     result->NotImplemented();
   }

@@ -545,6 +545,7 @@ JSValueRef CanvasRenderingContext2D::drawImage(JSContextRef ctx, JSObjectRef fun
 
 
   double sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight;
+  sx = sy = sWidth = sHeight = dx = dy = dWidth = dHeight = -1;
   if (argumentCount == 3) {
     dx = JSValueToNumber(ctx, arguments[1], exception);
     dy = JSValueToNumber(ctx, arguments[2], exception);

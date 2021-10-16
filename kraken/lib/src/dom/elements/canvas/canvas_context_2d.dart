@@ -7,7 +7,6 @@ import 'dart:typed_data';
 import 'dart:ui';
 import 'dart:ffi';
 import 'dart:collection';
-import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 import 'package:kraken/bridge.dart';

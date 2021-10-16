@@ -3,7 +3,7 @@ import 'dart:ffi';
 import 'dart:typed_data';
 import 'dart:ui';
 
-import 'package:ffi/ffi.dart';
+import 'package:ffi/ffi.dart' hide malloc;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/painting.dart';
@@ -15,6 +15,7 @@ import 'package:kraken/module.dart';
 import 'package:kraken/src/module/performance_timing.dart';
 import 'platform.dart';
 import 'native_types.dart';
+import 'malloc.dart'; // override malloc in 'package:ffi/ffi.dart'
 
 // An native struct can be directly convert to javaScript String without any conversion cost.
 class NativeString extends Struct {

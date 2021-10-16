@@ -8,7 +8,7 @@ import 'dart:ffi';
 import 'dart:io' show Platform, Directory;
 import 'dart:typed_data';
 
-import 'package:ffi/ffi.dart';
+import 'package:ffi/ffi.dart' hide malloc;
 import 'package:path/path.dart';
 
 /// Search dynamic lib from env.KRAKEN_LIBRARY_PATH or /usr/lib

@@ -10,7 +10,7 @@ import 'dart:ffi';
 import 'dart:ui';
 import 'dart:io' show Platform;
 import 'dart:typed_data';
-import 'package:ffi/ffi.dart';
+import 'package:ffi/ffi.dart' hide malloc;
 import 'package:flutter/material.dart';
 import 'package:kraken/launcher.dart';
 import 'package:kraken/dom.dart';

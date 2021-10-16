@@ -55,6 +55,10 @@ struct KRAKEN_EXPORT NativeString {
 
   NativeString *clone();
   void free();
+  // NativeString(const uint16_t * str=(uint16_t *)L"",int32_t len=0){
+  //   string = str;
+  //   length = len;
+  // }
 };
 
 struct KrakenInfo;
