@@ -7,8 +7,18 @@
 #include "foundation/logging.h"
 #include <sstream>
 
+// #define ENABLE_LOGFILE
+
+#ifdef ENABLE_LOGFILE
+#include <fstream>
+#endif // ENABLE_LOGFILE
+
 namespace kraken::binding::jsc {
 namespace {
+
+#ifdef ENABLE_LOGFILE
+std::ofstream logFile { "console.log", std::ofstream::trunc };
+#endif // ENABLE_LOGFILE
 
 JSValueRef print(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount,
                  const JSValueRef arguments[], JSValueRef *exception) {
@@ -21,6 +31,9 @@ JSValueRef print(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject,
     JSStringGetUTF8CString(str, buffer, length);
     JSStringRelease(str);
     stream << buffer;
+#ifdef ENABLE_LOGFILE
+    logFile << stream.str()<< std::endl;
+#endif // #ifdef ENABLE_LOGFILE
     free(buffer);
   } else {
     KRAKEN_LOG(ERROR) << "Failed to execute 'print': log must be string.";

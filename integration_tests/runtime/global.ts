@@ -33,6 +33,9 @@ function setAttributes(dom: any, object: any) {
 }
 
 function sleep(second: number) {
+  if(__kraken__.system_name === 'windows' && second < (16/1000)){
+    throw new Error('sleep on windows OS should not small than 16ms!');
+  }
   return new Promise(done => setTimeout(done, second * 1000));
 }
 

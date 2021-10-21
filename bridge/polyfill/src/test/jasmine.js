@@ -705,7 +705,7 @@ getJasmineRequireObj().Spec = function (j$) {
       this.result.failedExpectations.push(expectationResult);
 
       if (this.throwOnExpectationFailure && !isError) {
-        throw new j$.errors.ExpectationFailed();
+        // throw new j$.errors.ExpectationFailed();
       }
     }
   };
@@ -3671,6 +3671,7 @@ getJasmineRequireObj().Expector = function (j$) {
       this.expected = this.expected[0];
     }
 
+    // console.error(`processResult ${result.pass} \n\tmessage = ${message}`);
     this.addExpectationResult(result.pass, {
       matcherName: this.matcherName,
       passed: result.pass,
@@ -3680,6 +3681,7 @@ getJasmineRequireObj().Expector = function (j$) {
       actual: this.actual,
       expected: this.expected // TODO: this may need to be arrayified/sliced
     });
+    // console.error(`processResult after addExpectationResult`);
   };
 
   return Expector;
@@ -4039,7 +4041,7 @@ getJasmineRequireObj().toBeResolvedTo = function (j$) {
 
 getJasmineRequireObj().toMatchSnapshot = function (j$) {
   const _matchSnapshotCounter = {};
-  
+
   // The md5 copy from https://github.com/jbt/tiny-hashes/tree/master/md5
   var k = [], i = 0;
   for (; i < 64;) {
@@ -4123,6 +4125,8 @@ getJasmineRequireObj().toMatchSnapshot = function (j$) {
    * await expectAsync(document.body.toBlob()).toMatchSnapshot('filename');
    */
   return function toMatchSnapshot(util, customEqualityTesters) {
+    const d = new Date();
+    var n = d.getTime();
     return {
       compare: function (actualPromise, filename) {
         if (!j$.isPromiseLike(actualPromise)) {
@@ -4138,19 +4142,23 @@ getJasmineRequireObj().toMatchSnapshot = function (j$) {
         filename = `${filename}.${md5(this.description).slice(0, 8)}${countWithinSameSpec}`;
 
         return actualPromise.then(blob => {
+          // console.error(`~~~~~~~~~~~~~~ toMatchSnapshot [${countWithinSameSpec}] =>`)
           return new Promise((resolve, reject) => {
             // @TODO: the C++ HostingObject of Blob, need to removed when jsa support constructor operation.
             __kraken_match_image_snapshot__(blob, filename, (status) => {
+              // console.error(`~~~~~~~~~~~~~~ __kraken_match_image_snapshot__ [${countWithinSameSpec}] => ${status}`)
               // @NOTE: toMatchSnapshot should resolve before spec done.
               const _currentSpec = j$.getEnv().currentRunnable();
               if (_currentSpec.id !== specId) {
                 reject(new Error(`Expected toMatchSnapshot to be resolved before "${this.description})" done.`));
               }
-
+              var n2 = new Date().getTime();
+              // console.error(`~~~~~~~~~~~~~~ __kraken_match_image_snapshot__ [${countWithinSameSpec}] ### `)
+              // console.error(resolve)
               if (status) {
                 return resolve({ pass: true });
               } else {
-                return resolve({ pass: false, message: `Expected an screenshot is not equal with "${filename}" snapshot.` });
+                return resolve({ pass: false, message: `Expected an screenshot is not equal with "${filename}" snapshot. TIME=${(n2-n)/1000}s` });
               }
             });
           });

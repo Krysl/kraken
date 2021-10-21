@@ -17,6 +17,11 @@ void bindKraken(std::unique_ptr<JSContext> &context) {
 
   // Other properties are injected by dart.
   JSC_GLOBAL_SET_PROPERTY(context, "__kraken__", kraken);
+
+  JSC_SET_STRING_PROPERTY(
+    context, kraken, "system_name",
+    JSValueMakeString(context->context(),
+                      JSStringCreateWithUTF8CString(krakenInfo->system_name)));
 }
 
 } // namespace kraken::binding::jsc

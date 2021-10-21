@@ -1,0 +1,5 @@
+# https://code.google.com/p/angleproject/wiki/CodingStandard
+# See Clang docs: http://clang.llvm.org/docs/ClangFormatStyleOptions.html
+BasedOnStyle: Google
+
+IncludeBlocks: Preserve
