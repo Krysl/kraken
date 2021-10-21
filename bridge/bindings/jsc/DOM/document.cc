@@ -412,7 +412,7 @@ JSValueRef JSDocument::getElementsByTagName(JSContextRef ctx, JSObjectRef functi
     return false;
   });
 
-  JSValueRef elementArguments[elements.size()];
+  JSValueRef *elementArguments = (JSValueRef*)alloca(sizeof(JSValueRef) * elements.size());
 
   for (int i = 0; i < elements.size(); i++) {
     elementArguments[i] = elements[i]->object;
