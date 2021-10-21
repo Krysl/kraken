@@ -96,6 +96,10 @@ mixin RenderBoxContainerDefaultsMixin<ChildType extends RenderBox,
     List<RenderObject?> sortedChildren = (this as RenderLayoutBox).sortedChildren;
     for (int i = sortedChildren.length - 1; i >= 0; i--) {
       ChildType child = sortedChildren[i] as ChildType;
+      // Ignore detached render object.
+      if (!child.attached) {
+        continue;
+      }
       final ParentDataType childParentData = child.parentData as ParentDataType;
       final bool isHit = result.addWithPaintOffset(
         offset: childParentData.offset == Offset.zero
@@ -169,44 +173,22 @@ class RenderLayoutBox extends RenderBoxModel
     }
   }
 
-  // Mark this container to sort children by zIndex properties.
-  // When children have positioned elements, which needs to reorder and paint earlier than flow layout renderObjects.
-  void markNeedsSortChildren() {
-    _isChildrenSorted = false;
+  // Sort children by zIndex, used for paint and hitTest.
+  List<RenderObject> _sortedChildren = [];
+
+  List<RenderObject> get sortedChildren {
+    return _sortedChildren;
   }
 
-  bool _isChildrenSorted = false;
-
-  bool get isChildrenSorted => _isChildrenSorted;
-
-  List<RenderObject?>? _sortedChildren;
-
-  List<RenderObject?> get sortedChildren {
-    if (_sortedChildren == null) return [];
-    return _sortedChildren!;
-  }
-
-  set sortedChildren(List<RenderObject?> value) {
-    _isChildrenSorted = true;
+  set sortedChildren(List<RenderObject> value) {
     _sortedChildren = value;
   }
 
+  // No need to override [all] and [addAll] method cause they invoke [insert] method eventually.
   @override
   void insert(RenderBox child, {RenderBox? after}) {
     super.insert(child, after: after);
-    _isChildrenSorted = false;
-  }
-
-  @override
-  void add(RenderBox child) {
-    super.add(child);
-    _isChildrenSorted = false;
-  }
-
-  @override
-  void addAll(List<RenderBox>? children) {
-    super.addAll(children);
-    _isChildrenSorted = false;
+    insertChildIntoSortedChildren(child, after: after);
   }
 
   @override
@@ -218,19 +200,81 @@ class RenderLayoutBox extends RenderBoxModel
       }
     }
     super.remove(child);
-    _isChildrenSorted = false;
+    sortedChildren.remove(child);
   }
 
   @override
   void removeAll() {
     super.removeAll();
-    _isChildrenSorted = false;
+    sortedChildren = [];
   }
 
   @override
   void move(RenderBox child, {RenderBox? after}) {
     super.move(child, after: after);
-    _isChildrenSorted = false;
+    sortedChildren.remove(child);
+    insertChildIntoSortedChildren(child, after: after);
+  }
+
+  // Sort siblings by zIndex.
+  // Should be override in child Class according to different zIndex rule of Flow and Flex layout.
+  int sortSiblingsByZIndex(RenderObject prev, RenderObject next) {
+    return -1;
+  }
+
+  // Insert child in sortedChildren.
+  void insertChildIntoSortedChildren(RenderBox child, {RenderBox? after}) {
+    List<RenderObject> children = getChildrenAsList();
+
+    // No need to paint position holder.
+    if (child is RenderPositionHolder) {
+      return;
+    }
+    // Find the real renderBox of position holder to insert cause the position holder may be
+    // moved before its real renderBox which will cause the insert order wrong.
+    if (after is RenderPositionHolder && sortedChildren.contains(after.realDisplayedBox)) {
+      after = after.realDisplayedBox;
+    }
+
+    // Original index to insert into ignoring zIndex.
+    int oriIdx = after != null ? sortedChildren.indexOf(after) + 1 : sortedChildren.length;
+    // The final index to insert into considering zIndex after comparing with siblings.
+    int insertIdx = oriIdx;
+
+    // Compare zIndex to previous siblings first, if found sibling zIndex bigger than
+    // child, insert child at that position directly, otherwise compare zIndex to next siblings.
+    if (oriIdx > 0) {
+      while(insertIdx > 0) {
+        RenderObject prevSibling = sortedChildren[insertIdx - 1];
+        int priority = sortSiblingsByZIndex(prevSibling, child);
+        // Compare the siblings' render tree order if their zIndex priority are the same.
+        if (priority > 0 ||
+          (priority == 0 && children.indexOf(prevSibling) > children.indexOf(child))
+        ) {
+          insertIdx--;
+        } else {
+          break;
+        }
+      }
+    }
+
+    // If no previous siblings has zIndex bigger than child, compare zIndex to next siblings.
+    if (insertIdx == oriIdx && insertIdx < sortedChildren.length) {
+      while(insertIdx < sortedChildren.length) {
+        RenderObject nextSibling = sortedChildren[insertIdx];
+        int priority = sortSiblingsByZIndex(child, nextSibling);
+        // Compare the siblings' render tree order if their zIndex priority are the same.
+        if (priority > 0 ||
+          (priority == 0 && children.indexOf(child) > children.indexOf(nextSibling))
+        ) {
+          insertIdx++;
+        } else {
+          break;
+        }
+      }
+    }
+
+    sortedChildren.insert(insertIdx, child);
   }
 
   // Get all children as a list and detach them all.
@@ -251,8 +295,8 @@ class RenderLayoutBox extends RenderBoxModel
 
     // Layout positioned element
     while (child != null) {
-      final RenderLayoutParentData? childParentData =
-          child.parentData as RenderLayoutParentData?;
+      final ContainerParentDataMixin<RenderBox>? childParentData =
+          child.parentData as ContainerParentDataMixin<RenderBox>?;
       if (child is! RenderBoxModel) {
         child = childParentData!.nextSibling;
         continue;
@@ -322,10 +366,9 @@ class RenderLayoutBox extends RenderBoxModel
       // Text box always has baseline
       if (childDistance == null &&
           isChildInline &&
-          child is RenderBoxModel &&
-          child.contentSize != null) {
+          child is RenderBoxModel) {
         // Flutter only allow access size of direct children, so cannot use child.size
-        Size childSize = child.getBoxSize(child.contentSize!);
+        Size childSize = child.getBoxSize(child.contentSize);
         childDistance = childSize.height;
       }
 
@@ -613,6 +656,7 @@ class RenderBoxModel extends RenderBox
 
       // Copy overflow
       ..scrollListener = scrollListener
+      ..pointerListener = pointerListener
       ..clipX = clipX
       ..clipY = clipY
       ..enableScrollX = enableScrollX
@@ -868,7 +912,7 @@ class RenderBoxModel extends RenderBox
     return constraints;
   }
 
-  /// Content width of render box model calcaluted from style
+  /// Content width of render box model calculated from style
   static double? getLogicalContentWidth(RenderBoxModel renderBoxModel) {
     RenderBoxModel originalRenderBoxModel = renderBoxModel;
     double cropWidth = 0;
@@ -928,6 +972,11 @@ class RenderBoxModel extends RenderBox
                   width = renderStyle.width;
                   cropPaddingBorder(renderBoxModel);
                   break;
+                } else if (renderBoxModel.constraints.isTight) {
+                  // Cases like flex item with flex-grow and no width in flex row direction.
+                  width = renderBoxModel.constraints.maxWidth;
+                  cropPaddingBorder(renderBoxModel);
+                  break;
                 } else if (display == CSSDisplay.inlineBlock ||
                     display == CSSDisplay.inlineFlex ||
                     display == CSSDisplay.sliver) {
@@ -955,7 +1004,7 @@ class RenderBoxModel extends RenderBox
       default:
         break;
     }
-    // Get height by intrinsic ratio for replaced elemnent if height is not defined
+    // Get height by intrinsic ratio for replaced element if height is not defined
     if (width == null && intrinsicRatio != null) {
       width = originalRenderBoxModel.renderStyle.getWidthByIntrinsicRatio() +
           cropWidth;
@@ -979,7 +1028,7 @@ class RenderBoxModel extends RenderBox
     }
   }
 
-  /// Content height of render box model calcaluted from style
+  /// Content height of render box model calculated from style
   static double? getLogicalContentHeight(RenderBoxModel renderBoxModel) {
     RenderBoxModel originalRenderBoxModel = renderBoxModel;
     CSSDisplay? display = renderBoxModel.renderStyle.transformedDisplay;
@@ -1030,6 +1079,11 @@ class RenderBoxModel extends RenderBox
             height = renderStyle.height;
             cropPaddingBorder(renderBoxModel);
             break;
+          } else if (renderBoxModel.constraints.isTight) {
+            // Cases like flex item with flex-grow and no height in flex column direction.
+            height = renderBoxModel.constraints.maxHeight;
+            cropPaddingBorder(renderBoxModel);
+            break;
           }
         } else {
           break;
@@ -1037,7 +1091,7 @@ class RenderBoxModel extends RenderBox
       }
     }
 
-    // Get height by intrinsic ratio for replaced elemnent if height is not defined
+    // Get height by intrinsic ratio for replaced element if height is not defined
     if (height == null && intrinsicRatio != null) {
       height = originalRenderBoxModel.renderStyle.getHeightByIntrinsicRatio() +
           cropHeight;
@@ -1171,13 +1225,7 @@ class RenderBoxModel extends RenderBox
 
   // The contentSize of layout box
   Size? _contentSize;
-
-  Size? get contentSize {
-    if (_contentSize == null) {
-      return Size(0, 0);
-    }
-    return _contentSize;
-  }
+  Size get contentSize => _contentSize ?? Size.zero;
 
   /// Logical content width calculated from style
   double? logicalContentWidth;
@@ -1186,7 +1234,7 @@ class RenderBoxModel extends RenderBox
   double? logicalContentHeight;
 
   double get clientWidth {
-    double width = contentSize!.width;
+    double width = contentSize.width;
     if (renderStyle.padding != null) {
       width += renderStyle.padding!.horizontal;
     }
@@ -1194,7 +1242,7 @@ class RenderBoxModel extends RenderBox
   }
 
   double get clientHeight {
-    double height = contentSize!.height;
+    double height = contentSize.height;
     if (renderStyle.padding != null) {
       height += renderStyle.padding!.vertical;
     }
@@ -1480,6 +1528,9 @@ class RenderBoxModel extends RenderBox
     if (fixedChildren.isNotEmpty) {
       fixedChildren.clear();
     }
+
+    // Evict render decoration image cache.
+    _renderStyle.decoration?.image?.image.evict();
   }
 
   Offset getTotalScrollOffset() {

@@ -34,7 +34,6 @@ abstract class KrakenBundle {
   // JS Content
   late String content;
   // JS line offset, default to 0.
-  List<String> assets = [];
   int lineOffset = 0;
   // Kraken bundle manifest
   AppManifest? manifest;
@@ -150,7 +149,7 @@ class NetworkAssetBundle extends AssetBundle {
   @override
   Future<ByteData> load(String key) async {
     final HttpClientRequest request = await httpClient.getUrl(_urlFromKey(key));
-    KrakenHttpOverrides.setContextHeader(request, contextId);
+    KrakenHttpOverrides.setContextHeader(request.headers, contextId);
     final HttpClientResponse response = await request.close();
     if (response.statusCode != HttpStatus.ok)
       throw FlutterError.fromParts(<DiagnosticsNode>[

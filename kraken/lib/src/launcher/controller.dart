@@ -11,9 +11,9 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
-
 import 'package:kraken/bridge.dart';
 import 'package:kraken/dom.dart';
+import 'package:kraken/widget.dart';
 import 'package:kraken/module.dart';
 import 'package:kraken/rendering.dart';
 import 'package:kraken/gesture.dart';
@@ -62,9 +62,7 @@ class KrakenViewController {
   // during a kraken view's process of loading, and completing a navigation request.
   KrakenNavigationDelegate? navigationDelegate;
 
-  GestureClient? gestureClient;
-
-  EventClient? eventClient;
+  GestureListener? gestureListener;
 
   double _viewportWidth;
   double get viewportWidth => _viewportWidth;
@@ -86,6 +84,8 @@ class KrakenViewController {
 
   Color? background;
 
+  WidgetDelegate? widgetDelegate;
+
   KrakenViewController(
     this._viewportWidth,
     this._viewportHeight, {
@@ -95,8 +95,8 @@ class KrakenViewController {
     int? contextId,
     required this.rootController,
     this.navigationDelegate,
-    this.gestureClient,
-    this.eventClient,
+    this.gestureListener,
+    this.widgetDelegate,
   }) {
     if (kProfileMode) {
       PerformanceTiming.instance().mark(PERF_VIEW_CONTROLLER_PROPERTY_INIT);
@@ -124,7 +124,7 @@ class KrakenViewController {
     viewport = RenderViewportBox(
       background: background,
       viewportSize: Size(viewportWidth, viewportHeight),
-      gestureClient: gestureClient,
+      gestureListener: gestureListener,
       controller: rootController
     );
 
@@ -138,7 +138,8 @@ class KrakenViewController {
       viewport: viewport,
       showPerformanceOverlayOverride: showPerformanceOverlay,
       controller: rootController,
-      eventClient: eventClient,
+      gestureListener: gestureListener,
+      widgetDelegate: widgetDelegate,
     );
 
     if (kProfileMode) {
@@ -152,10 +153,7 @@ class KrakenViewController {
 
   // index value which identify javascript runtime context.
   late int _contextId;
-
-  int get contextId {
-    return _contextId;
-  }
+  int get contextId => _contextId;
 
   // should render performanceOverlay layer into the screen for performance profile.
   bool? showPerformanceOverlay;
@@ -170,9 +168,9 @@ class KrakenViewController {
 
   late RenderViewportBox viewport;
 
-  void evaluateJavaScripts(String code, [String source = 'kraken://']) {
+  void evaluateJavaScripts(String code, [String source = 'vm://']) {
     assert(!_disposed, 'Kraken have already disposed');
-    evaluateScripts(_contextId, code, source, 0);
+    evaluateScripts(_contextId, code, source);
   }
 
   // attach kraken's renderObject to an renderObject.
@@ -180,13 +178,9 @@ class KrakenViewController {
     _elementManager.attach(parent, previousSibling, showPerformanceOverlay: showPerformanceOverlay ?? false);
   }
 
-  Window? get window {
-    return getEventTargetById(WINDOW_ID) as Window?;
-  }
+  Window? get window => getEventTargetById(WINDOW_ID) as Window?;
 
-  Document? get document {
-    return getEventTargetById(DOCUMENT_ID) as Document?;
-  }
+  Document? get document => getEventTargetById(DOCUMENT_ID) as Document?;
 
   // dispose controller and recycle all resources.
   void dispose() {
@@ -351,6 +345,16 @@ class KrakenViewController {
     }
   }
 
+  void createDocumentFragment(int targetId, Pointer<NativeNode> nativePtr) {
+    if (kProfileMode) {
+      PerformanceTiming.instance().mark(PERF_CREATE_DOCUMENT_FRAGMENT_START, uniqueId: targetId);
+    }
+    _elementManager.createDocumentFragment(targetId, nativePtr);
+    if (kProfileMode) {
+      PerformanceTiming.instance().mark(PERF_CREATE_DOCUMENT_FRAGMENT_END, uniqueId: targetId);
+    }
+  }
+
   EventTarget? getEventTargetById(int id) {
     return _elementManager.getEventTargetByTargetId<EventTarget>(id);
   }
@@ -430,6 +434,8 @@ class KrakenController {
     return getControllerOfJSContextId(contextId);
   }
 
+  WidgetDelegate? widgetDelegate;
+
   LoadHandler? onLoad;
 
   // Error handler when load bundle failed.
@@ -457,9 +463,7 @@ class KrakenController {
     _name = value;
   }
 
-  final GestureClient? _gestureClient;
-
-  final EventClient? _eventClient;
+  final GestureListener? _gestureListener;
 
   KrakenController(
     String? name,
@@ -471,10 +475,10 @@ class KrakenController {
     String? bundlePath,
     String? bundleContent,
     Color? background,
-    GestureClient? gestureClient,
-    EventClient? eventClient,
+    GestureListener? gestureListener,
     KrakenNavigationDelegate? navigationDelegate,
     KrakenMethodChannel? methodChannel,
+    this.widgetDelegate,
     this.onLoad,
     this.onLoadError,
     this.onJSError,
@@ -485,8 +489,7 @@ class KrakenController {
         _bundleURL = bundleURL,
         _bundlePath = bundlePath,
         _bundleContent = bundleContent,
-        _gestureClient = gestureClient,
-        _eventClient = eventClient {
+        _gestureListener = gestureListener {
     if (kProfileMode) {
       PerformanceTiming.instance().mark(PERF_CONTROLLER_PROPERTY_INIT);
       PerformanceTiming.instance().mark(PERF_VIEW_CONTROLLER_INIT_START);
@@ -501,8 +504,8 @@ class KrakenController {
         enableDebug: enableDebug,
         rootController: this,
         navigationDelegate: navigationDelegate ?? KrakenNavigationDelegate(),
-        gestureClient: _gestureClient,
-        eventClient: _eventClient,
+        gestureListener: _gestureListener,
+        widgetDelegate: widgetDelegate,
     );
 
     if (kProfileMode) {
@@ -604,9 +607,13 @@ class KrakenController {
     return completer.future;
   }
 
-  String _href = '';
-  String get href => _href;
-  set href(String value) => _href = value;
+  String get href {
+    return getHref(_view.contextId);
+  }
+
+  set href(String value) {
+    setHref(_view.contextId, value);
+  }
 
   // reload current kraken view.
   Future<void> reload() async {

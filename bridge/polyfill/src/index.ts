@@ -1,5 +1,6 @@
 import 'es6-promise/dist/es6-promise.auto';
 import './dom';
+import './query-selector';
 import { console } from './console';
 import { WebSocket } from './websocket';
 import { fetch, Request, Response, Headers } from './fetch';
@@ -11,7 +12,6 @@ import { asyncStorage } from './async-storage';
 import { URLSearchParams } from './url-search-params';
 import { URL } from './url';
 import { kraken } from './kraken';
-import { history } from './history';
 
 defineGlobalProperty('console', console);
 defineGlobalProperty('WebSocket', WebSocket);
@@ -27,7 +27,6 @@ defineGlobalProperty('asyncStorage', asyncStorage);
 defineGlobalProperty('URLSearchParams', URLSearchParams);
 defineGlobalProperty('URL', URL);
 defineGlobalProperty('kraken', kraken);
-defineGlobalProperty('__history__', history, false);
 
 function defineGlobalProperty(key: string, value: any, isEnumerable: boolean = true) {
   Object.defineProperty(globalThis, key, {

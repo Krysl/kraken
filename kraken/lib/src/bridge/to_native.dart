@@ -136,7 +136,7 @@ nativeDynamicLibrary.lookup<NativeFunction<NativeEvaluateScripts>>('evaluateScri
 final DartParseHTML _parseHTML =
 nativeDynamicLibrary.lookup<NativeFunction<NativeParseHTML>>('parseHTML').asFunction();
 
-void evaluateScripts(int contextId, String code, String url, int line) {
+void evaluateScripts(int contextId, String code, String url, [int line = 0]) {
   if(KrakenController.getControllerOfJSContextId(contextId) == null) {
     return;
   }
@@ -159,6 +159,33 @@ void parseHTML(int contextId, String code, String url) {
     print('$e\n$stack');
   }
   freeNativeString(nativeString);
+}
+
+
+// register set href.
+typedef NativeSetHref = Void Function(
+    Int32 contextId, Pointer<Utf8> href);
+
+typedef DartSetHref = void Function(int contextId, Pointer<Utf8> url);
+
+final DartSetHref _setHref = nativeDynamicLibrary.lookup<NativeFunction<NativeSetHref>>('setHref').asFunction();
+
+void setHref(int contextId, String url) {
+  Pointer<Utf8> _url = url.toNativeUtf8();
+  _setHref(contextId, _url);
+}
+
+// register get href.
+typedef NativeGetHref = Pointer<NativeString> Function(
+    Int32 contextId);
+
+typedef DartGetHref = Pointer<NativeString> Function(int contextId);
+
+final DartGetHref _getHref = nativeDynamicLibrary.lookup<NativeFunction<NativeGetHref>>('getHref').asFunction();
+
+String getHref(int contextId) {
+  Pointer<NativeString> href = _getHref(contextId);
+  return nativeStringToString(href);
 }
 
 // Register initJsEngine
@@ -241,6 +268,7 @@ enum UICommandType {
   removeProperty,
   cloneNode,
   removeEvent,
+  createDocumentFragment,
 }
 
 class UICommandItem extends Struct {
@@ -453,6 +481,9 @@ void flushUICommand() {
           case UICommandType.removeProperty:
             String key = command.args[0];
             controller.view.removeProperty(id, key);
+            break;
+          case UICommandType.createDocumentFragment:
+            controller.view.createDocumentFragment(id, nativePtr.cast<NativeNode>());
             break;
           default:
             break;

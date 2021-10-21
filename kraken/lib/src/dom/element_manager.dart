@@ -17,6 +17,7 @@ import 'dart:ffi';
 import 'package:kraken/gesture.dart';
 import 'package:kraken/bridge.dart';
 import 'package:kraken/launcher.dart';
+import 'package:kraken/widget.dart';
 import 'package:kraken/dom.dart';
 import 'package:kraken/module.dart';
 import 'package:kraken/scheduler.dart';
@@ -71,9 +72,18 @@ class ElementManager implements WidgetsBindingObserver, ElementsBindingObserver 
 
   final List<VoidCallback> _detachCallbacks = [];
 
-  EventClient? eventClient;
+  GestureListener? gestureListener;
 
-  ElementManager({ required this.contextId, required this.viewport, required this.controller, this.showPerformanceOverlayOverride = false, this.eventClient }) {
+  WidgetDelegate? widgetDelegate;
+
+  ElementManager({
+    required this.contextId,
+    required this.viewport,
+    required this.controller,
+    this.showPerformanceOverlayOverride = false,
+    this.gestureListener,
+    this.widgetDelegate,
+  }) {
     if (kProfileMode) {
       PerformanceTiming.instance().mark(PERF_ELEMENT_MANAGER_PROPERTY_INIT);
       PerformanceTiming.instance().mark(PERF_ROOT_ELEMENT_INIT_START);
@@ -99,6 +109,21 @@ class ElementManager implements WidgetsBindingObserver, ElementsBindingObserver 
     setEventTarget(document);
 
     element_registry.defineBuiltInElements();
+
+    // Listeners need to be registered to window in order to dispatch events on demand.
+    if (gestureListener != null) {
+      if (gestureListener!.onTouchStart != null) {
+        window.addEvent(EVENT_TOUCH_START);
+      }
+
+      if (gestureListener!.onTouchMove != null) {
+        window.addEvent(EVENT_TOUCH_MOVE);
+      }
+
+      if (gestureListener!.onTouchEnd != null) {
+        window.addEvent(EVENT_TOUCH_END);
+      }
+    }
   }
 
   void _setupObserver() {
@@ -168,6 +193,11 @@ class ElementManager implements WidgetsBindingObserver, ElementsBindingObserver 
   void createTextNode(int id, Pointer<NativeTextNode> nativePtr, String data) {
     TextNode textNode = TextNode(id, nativePtr, data, this);
     setEventTarget(textNode);
+  }
+
+  void createDocumentFragment(int id, Pointer<NativeNode> nativePtr) {
+    DocumentFragment documentFragment = DocumentFragment(id, nativePtr, this);
+    setEventTarget(documentFragment);
   }
 
   void createComment(int id, Pointer<NativeCommentNode> nativePtr, String data) {
